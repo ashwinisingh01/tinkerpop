@@ -28,7 +28,6 @@ import org.apache.tinkerpop.gremlin.driver.ser.MessageTextSerializer;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.GraphManager;
 import org.apache.tinkerpop.gremlin.server.OpProcessor;
-import org.apache.tinkerpop.gremlin.server.ResponseHandlerContext;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
@@ -68,19 +67,8 @@ public abstract class AbstractOpProcessor implements OpProcessor {
      *
      * @param context The Gremlin Server {@link Context} object containing settings, request message, etc.
      * @param itty The result to iterator
-     * @see #handleIterator(ResponseHandlerContext, Iterator)
      */
     protected void handleIterator(final Context context, final Iterator itty) throws InterruptedException {
-        handleIterator(new ResponseHandlerContext(context), itty);
-    }
-
-    /**
-     * A variant of {@link #handleIterator(Context, Iterator)} that is suitable for use in situations when multiple
-     * threads may produce {@link ResponseStatusCode#isFinalResponse() final} response messages concurrently.
-     * @see #handleIterator(Context, Iterator)
-     */
-    protected void handleIterator(final ResponseHandlerContext rhc, final Iterator itty) throws InterruptedException {
-        final Context context = rhc.getContext();
         final ChannelHandlerContext ctx = context.getChannelHandlerContext();
         final RequestMessage msg = context.getRequestMessage();
         final Settings settings = context.getSettings();
@@ -97,9 +85,8 @@ public abstract class AbstractOpProcessor implements OpProcessor {
             // as there is nothing left to iterate if we are transaction managed then we should execute a
             // commit here before we send back a NO_CONTENT which implies success
             if (managedTransactionsForRequest) attemptCommit(msg, context.getGraphManager(), settings.strictTransactionManagement);
-            rhc.writeAndFlush(ResponseMessage.build(msg)
+            ctx.writeAndFlush(ResponseMessage.build(msg)
                     .code(ResponseStatusCode.NO_CONTENT)
-                    .statusAttributes(generateStatusAttributes(ctx, msg, ResponseStatusCode.NO_CONTENT, itty, settings))
                     .create());
             return;
         }
@@ -147,7 +134,7 @@ public abstract class AbstractOpProcessor implements OpProcessor {
                     // thread that processed the eval of the script so, we have to push serialization down into that
                     Frame frame = null;
                     try {
-                        frame = makeFrame(rhc, msg, serializer, useBinary, aggregate, code,
+                        frame = makeFrame(ctx, msg, serializer, useBinary, aggregate, code,
                                 generateResultMetaData(ctx, msg, code, itty, settings),
                                 generateStatusAttributes(ctx, msg, code, itty, settings));
                     } catch (Exception ex) {
@@ -197,7 +184,7 @@ public abstract class AbstractOpProcessor implements OpProcessor {
                     // required then it will be 100% complete before the client receives it. the "frame" at this point
                     // should have completely detached objects from the transaction (i.e. serialization has occurred)
                     // so a new one should not be opened on the flush down the netty pipeline
-                    rhc.writeAndFlush(code, frame);
+                    ctx.writeAndFlush(frame);
                 }
             } else {
                 // don't keep triggering this warning over and over again for the same request
@@ -276,24 +263,10 @@ public abstract class AbstractOpProcessor implements OpProcessor {
         return metaData;
     }
 
-    /**
-     * Caution: {@link #makeFrame(ResponseHandlerContext, RequestMessage, MessageSerializer, boolean, List, ResponseStatusCode, Map, Map)}
-     * should be used instead of this method whenever a {@link ResponseHandlerContext} is available.
-     */
     protected static Frame makeFrame(final ChannelHandlerContext ctx, final RequestMessage msg,
                                      final MessageSerializer serializer, final boolean useBinary, final List<Object> aggregate,
-                                     final ResponseStatusCode code, final Map<String,Object> responseMetaData,
+                                     final ResponseStatusCode code, final Map<String,Object> responseMetaData
                                      final Map<String,Object> statusAttributes) throws Exception {
-        final Context context = new Context(msg, ctx, null, null, null, null); // dummy context, good only for writing response messages to the channel
-        final ResponseHandlerContext rhc = new ResponseHandlerContext(context);
-        return makeFrame(rhc, msg, serializer, useBinary, aggregate, code, responseMetaData, statusAttributes);
-    }
-
-    protected static Frame makeFrame(final ResponseHandlerContext rhc, final RequestMessage msg,
-                                     final MessageSerializer serializer, final boolean useBinary, final List<Object> aggregate,
-                                     final ResponseStatusCode code, final Map<String,Object> responseMetaData,
-                                     final Map<String,Object> statusAttributes) throws Exception {
-        final ChannelHandlerContext ctx = rhc.getContext().getChannelHandlerContext();
         try {
             if (useBinary) {
                 return new Frame(serializer.serializeResponseAsBinary(ResponseMessage.build(msg)
@@ -318,7 +291,7 @@ public abstract class AbstractOpProcessor implements OpProcessor {
                     .statusMessage(errorMessage)
                     .statusAttributeException(ex)
                     .code(ResponseStatusCode.SERVER_ERROR_SERIALIZATION).create();
-            rhc.writeAndFlush(error);
+            ctx.writeAndFlush(error);
             throw ex;
         }
     }

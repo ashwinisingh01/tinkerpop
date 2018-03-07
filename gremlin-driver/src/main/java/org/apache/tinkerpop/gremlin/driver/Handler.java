@@ -255,13 +255,21 @@ final class Handler {
                         final List<String> exceptions = attributes.containsKey(Tokens.STATUS_ATTRIBUTE_EXCEPTIONS) ?
                                 (List<String>) attributes.get(Tokens.STATUS_ATTRIBUTE_EXCEPTIONS) : null;
                         queue.markError(new ResponseException(response.getStatus().getCode(), response.getStatus().getMessage(),
-                                exceptions, stackTrace, cleanStatusAttributes(attributes)));
+                                exceptions, stackTrace));
                     }
+                }
+
+                // the last message in a OK stream could have meta-data that is useful to the result. note that error
+                // handling of the status attributes is handled separately above
+                if (statusCode == ResponseStatusCode.SUCCESS || statusCode == ResponseStatusCode.NO_CONTENT) {
+                    // in 3.4.0 this should get refactored. i think the that the markComplete() could just take the
+                    // status attributes as its argument - need to investigate that further
+                    queue.statusAttributes = response.getStatus().getAttributes();
                 }
 
                 // as this is a non-PARTIAL_CONTENT code - the stream is done.
                 if (statusCode != ResponseStatusCode.PARTIAL_CONTENT) {
-                    pending.remove(response.getRequestId()).markComplete(response.getStatus().getAttributes());
+                    pending.remove(response.getRequestId()).markComplete();
                 }
             } finally {
                 // in the event of an exception above the exception is tossed and handled by whatever channelpipeline
@@ -284,15 +292,6 @@ final class Handler {
             // serialization exceptions should not close the channel - that's worth a retry
             if (!IteratorUtils.anyMatch(ExceptionUtils.getThrowableList(cause).iterator(), t -> t instanceof SerializationException))
                 if (ctx.channel().isActive()) ctx.close();
-        }
-
-        private Map<String,Object> cleanStatusAttributes(final Map<String,Object> statusAttributes) {
-            final Map<String,Object> m = new HashMap<>();
-            statusAttributes.forEach((k,v) -> {
-                if (!k.equals(Tokens.STATUS_ATTRIBUTE_EXCEPTIONS) && !k.equals(Tokens.STATUS_ATTRIBUTE_STACK_TRACE))
-                    m.put(k,v);
-            });
-            return m;
         }
     }
 

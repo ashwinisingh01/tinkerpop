@@ -43,15 +43,27 @@ import static org.junit.Assert.fail;
  */
 public class ResultSetTest extends AbstractResultQueueTest {
 
-    private static final Map<String,Object> ATTRIBUTES = new HashMap<String,Object>() {{
-        put("this", "that");
-    }};
-
     private ResultSet resultSet;
 
     @Before
     public void setupThis() {
         resultSet = new ResultSet(resultQueue, pool, readCompleted, RequestMessage.build("traversal").create(), null);
+    }
+
+    @Test
+    public void shouldReturnResponseAttributes() throws Exception {
+        resultQueue.statusAttributes = new HashMap<String,Object>() {{
+            put("test",123);
+            put("junk","here");
+        }};
+
+        final CompletableFuture<Map<String,Object>> attrs = resultSet.statusAttributes();
+        readCompleted.complete(null);
+
+        final Map<String,Object> m = attrs.get();
+        assertEquals(123, m.get("test"));
+        assertEquals("here", m.get("junk"));
+        assertEquals(2, m.size());
     }
 
     @Test
@@ -120,7 +132,7 @@ public class ResultSetTest extends AbstractResultQueueTest {
         resultQueue.add(new Result("test3"));
 
         assertThat(future.isDone(), is(false));
-        resultQueue.markComplete(ATTRIBUTES);
+        resultQueue.markComplete();
         assertThat(future.isDone(), is(true));
 
         final List<Result> results = future.get();
@@ -131,8 +143,6 @@ public class ResultSetTest extends AbstractResultQueueTest {
 
         assertThat(resultSet.allItemsAvailable(), is(true));
         assertEquals(0, resultSet.getAvailableItemCount());
-
-        assertEquals("that", resultQueue.getStatusAttributes().get("this"));
     }
 
     @Test
@@ -143,7 +153,7 @@ public class ResultSetTest extends AbstractResultQueueTest {
         resultQueue.add(new Result("test3"));
 
         assertThat(future.isDone(), is(false));
-        resultQueue.markComplete(ATTRIBUTES);
+        resultQueue.markComplete();
 
         final List<Result> results = future.get();
         assertEquals("test1", results.get(0).getString());
@@ -154,8 +164,6 @@ public class ResultSetTest extends AbstractResultQueueTest {
         assertThat(future.isDone(), is(true));
         assertThat(resultSet.allItemsAvailable(), is(true));
         assertEquals(0, resultSet.getAvailableItemCount());
-
-        assertEquals("that", resultQueue.getStatusAttributes().get("this"));
     }
 
     @Test
