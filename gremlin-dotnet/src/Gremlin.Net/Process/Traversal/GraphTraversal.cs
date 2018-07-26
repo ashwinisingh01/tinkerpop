@@ -401,15 +401,6 @@ namespace Gremlin.Net.Process.Traversal
         }
 
         /// <summary>
-        ///     Adds the connectedComponent step to this <see cref="GraphTraversal{SType, EType}" />.
-        /// </summary>
-        public GraphTraversal<S, E> ConnectedComponent ()
-        {
-            Bytecode.AddStep("connectedComponent");
-            return Wrap<S, E>(this);
-        }
-
-        /// <summary>
         ///     Adds the constant step to this <see cref="GraphTraversal{SType, EType}" />.
         /// </summary>
         public GraphTraversal<S, E2> Constant<E2> (E2 e)
@@ -1265,15 +1256,6 @@ namespace Gremlin.Net.Process.Traversal
         }
 
         /// <summary>
-        ///     Adds the read step to this <see cref="GraphTraversal{SType, EType}" />.
-        /// </summary>
-        public GraphTraversal<S, E> Read ()
-        {
-            Bytecode.AddStep("read");
-            return Wrap<S, E>(this);
-        }
-
-        /// <summary>
         ///     Adds the repeat step to this <see cref="GraphTraversal{SType, EType}" />.
         /// </summary>
         public GraphTraversal<S, E> Repeat (string loopName, ITraversal repeatTraversal)
@@ -1392,15 +1374,6 @@ namespace Gremlin.Net.Process.Traversal
         {
             Bytecode.AddStep("select", keyTraversal);
             return Wrap<S, E2>(this);
-        }
-
-        /// <summary>
-        ///     Adds the shortestPath step to this <see cref="GraphTraversal{SType, EType}" />.
-        /// </summary>
-        public GraphTraversal<S, Path> ShortestPath ()
-        {
-            Bytecode.AddStep("shortestPath");
-            return Wrap<S, Path>(this);
         }
 
         /// <summary>
@@ -1727,15 +1700,6 @@ namespace Gremlin.Net.Process.Traversal
         public GraphTraversal<S, E> With (string key, object value)
         {
             Bytecode.AddStep("with", key, value);
-            return Wrap<S, E>(this);
-        }
-
-        /// <summary>
-        ///     Adds the write step to this <see cref="GraphTraversal{SType, EType}" />.
-        /// </summary>
-        public GraphTraversal<S, E> Write ()
-        {
-            Bytecode.AddStep("write");
             return Wrap<S, E>(this);
         }
 

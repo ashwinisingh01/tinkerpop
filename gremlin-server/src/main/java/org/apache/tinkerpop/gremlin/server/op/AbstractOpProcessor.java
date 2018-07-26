@@ -265,7 +265,7 @@ public abstract class AbstractOpProcessor implements OpProcessor {
 
     protected static Frame makeFrame(final ChannelHandlerContext ctx, final RequestMessage msg,
                                      final MessageSerializer serializer, final boolean useBinary, final List<Object> aggregate,
-                                     final ResponseStatusCode code, final Map<String,Object> responseMetaData
+                                     final ResponseStatusCode code, final Map<String,Object> responseMetaData,
                                      final Map<String,Object> statusAttributes) throws Exception {
         try {
             if (useBinary) {
