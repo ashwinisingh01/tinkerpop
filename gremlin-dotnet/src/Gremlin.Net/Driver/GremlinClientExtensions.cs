@@ -126,7 +126,7 @@ namespace Gremlin.Net.Driver
         ///     Thrown when a response is received from Gremlin Server that indicates
         ///     that an error occurred.
         /// </exception>
-        public static async Task<IReadOnlyCollection<T>> SubmitAsync<T>(this IGremlinClient gremlinClient,
+        public static async Task<IResultSet<T>> SubmitAsync<T>(this IGremlinClient gremlinClient,
             string requestScript,
             Dictionary<string, object> bindings = null)
         {

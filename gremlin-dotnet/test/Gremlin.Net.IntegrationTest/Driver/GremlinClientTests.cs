@@ -28,6 +28,7 @@ using Gremlin.Net.Driver;
 using Gremlin.Net.Driver.Exceptions;
 using Gremlin.Net.Driver.Messages;
 using Gremlin.Net.IntegrationTest.Util;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Gremlin.Net.IntegrationTest.Driver
@@ -51,7 +52,21 @@ namespace Gremlin.Net.IntegrationTest.Driver
                 Assert.Equal(expectedResponse, response);
             }
         }
+        
+        [Fact]
+        public async Task ShouldReturnResponseAttributes()
+        {
+            var gremlinScript = "g.addV('fhshf')";
+            var reqMessage = RequestMessage.Build(Tokens.OpsEval).AddArgument(Tokens.ArgsGremlin, gremlinScript).Create();
 
+            var gremlinServer = new GremlinServer(TestHost, TestPort);
+            using (var gremlinClient = new GremlinClient(gremlinServer))
+            {
+                var requestMsg = _requestMessageProvider.GetDummyMessage();
+                var resultSet = await gremlinClient.SubmitAsync<object>(reqMessage);
+                Assert.NotNull(resultSet.StatusAttributes);
+            }
+        }
         [Fact]
         public async Task ShouldHandleBigResponse()
         {

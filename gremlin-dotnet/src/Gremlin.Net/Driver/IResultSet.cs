@@ -1,5 +1,4 @@
 #region License
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,31 +17,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Gremlin.Net.Driver.Messages;
 
 namespace Gremlin.Net.Driver
 {
     /// <summary>
-    ///     Provides a mechanism for submitting Gremlin requests.
+    /// A IResultSet is returned from the submission of a Gremlin script to the server and represents the results provided by the server
+    /// ResultSet includes enumerable data and status attributes.
     /// </summary>
-    public interface IGremlinClient : IDisposable
+    /// <typeparam name="T">Type of the result elements</typeparam>
+    public interface IResultSet<T> : IReadOnlyCollection<T>
     {
         /// <summary>
-        ///     Submits a request message as an asynchronous operation.
+        ///  Gets or sets the data from the response
         /// </summary>
-        /// <typeparam name="T">The type of the expected results.</typeparam>
-        /// <param name="requestMessage">The <see cref="RequestMessage" /> to send.</param>
-        /// <returns>A collection of the data returned from the server.</returns>
-        /// <exception cref="Exceptions.ResponseException">
-        ///     Thrown when a response is received from Gremlin Server that indicates
-        ///     that an error occurred.
-        /// </exception>
-        Task<IResultSet<T>> SubmitAsync<T>(RequestMessage requestMessage);
+        IReadOnlyCollection<T> Data {get;}
+        
+        /// <summary>
+        /// Gets or sets the status attributes from the gremlin response
+        /// </summary>
+        Dictionary<string, object> StatusAttributes {get;}
     }
 }
