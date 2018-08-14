@@ -56,14 +56,11 @@ namespace Gremlin.Net.IntegrationTest.Driver
         [Fact]
         public async Task ShouldReturnResponseAttributes()
         {
-            var gremlinScript = "g.addV('fhshf')";
-            var reqMessage = RequestMessage.Build(Tokens.OpsEval).AddArgument(Tokens.ArgsGremlin, gremlinScript).Create();
-
             var gremlinServer = new GremlinServer(TestHost, TestPort);
             using (var gremlinClient = new GremlinClient(gremlinServer))
             {
                 var requestMsg = _requestMessageProvider.GetDummyMessage();
-                var resultSet = await gremlinClient.SubmitAsync<object>(reqMessage);
+                var resultSet = await gremlinClient.SubmitAsync<object>(requestMsg);
                 Assert.NotNull(resultSet.StatusAttributes);
             }
         }
