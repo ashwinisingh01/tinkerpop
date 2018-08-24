@@ -116,10 +116,19 @@ namespace Gremlin.Net.Driver
                             result.Add(d);
                         }
                 }
+
+                if (status.Code == ResponseStatusCode.Success || status.Code == ResponseStatusCode.NoContent)
+                {
+                    statusAttributes = receivedMsg.Status.Attributes;
+                }
+
             } while (status.Code == ResponseStatusCode.PartialContent || status.Code == ResponseStatusCode.Authenticate);
 
             
-            resultSet = new ResultSet<T>(isAggregatingSideEffects ? new List<T> { (T)aggregator.GetAggregatedResult() } : result, statusAttributes);
+            resultSet = new ResultSet<T>(
+                isAggregatingSideEffects ? new List<T> { (T)aggregator.GetAggregatedResult() } : result,
+                statusAttributes);
+                
             return resultSet;
         }
 

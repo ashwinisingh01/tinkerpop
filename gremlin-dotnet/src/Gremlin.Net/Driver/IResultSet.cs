@@ -28,7 +28,7 @@ namespace Gremlin.Net.Driver
     /// ResultSet includes enumerable data and status attributes.
     /// </summary>
     /// <typeparam name="T">Type of the result elements</typeparam>
-    public interface IResultSet<T> : IReadOnlyCollection<T>
+    public interface IResultSet<T>
     {
         /// <summary>
         ///  Gets or sets the data from the response

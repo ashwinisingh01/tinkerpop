@@ -18,21 +18,15 @@
  * under the License.
  */
 #endregion
-using Gremlin.Net.Driver.Exceptions;
+
 using System.Collections;
 using System.Collections.Generic;
+
 namespace Gremlin.Net.Driver
 {
-    /// <summary>
-    /// A ResultSet is returned from the submission of a Gremlin script to the server and represents the results provided by the server
-    /// ResultSet includes enumerable data and status attributes.
-    /// </summary>
-    /// <typeparam name="T">Type of the result elements</typeparam>
+    ///<inheritdoc />
     internal sealed class ResultSet<T> : IResultSet<T>
     {
-        private readonly IReadOnlyCollection<T> data;
-        private readonly Dictionary<string, object> statusAttributes;
-
         /// <summary>
         /// Initializes a new instance of the ResultSet class for the specified data and status attributes.
         /// </summary>
@@ -40,8 +34,8 @@ namespace Gremlin.Net.Driver
         /// <param name="attributes"></param>
         public ResultSet(IReadOnlyCollection<T> data, Dictionary<string, object> attributes)
         {
-            this.data = data;
-            this.statusAttributes = attributes;
+            this.Data = data;
+            this.StatusAttributes = attributes;
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>
@@ -63,23 +57,13 @@ namespace Gremlin.Net.Driver
         public int Count => this.Data.Count;
 
         /// <summary>
-        ///  Gets or sets the data from the response
+        ///  Gets the data from the response
         /// </summary>
-        public IReadOnlyCollection<T> Data 
-        {
-            get{
-                return this.data;
-            }
-        }
-
+        public IReadOnlyCollection<T> Data {get; private set;}
+      
         /// <summary>
-        /// Gets or sets the status attributes from the gremlin response
+        /// Gets the status attributes from the gremlin response
         /// </summary>
-        public Dictionary<string, object> StatusAttributes
-        {
-            get{
-                return this.statusAttributes;
-            }
-        }
+        public Dictionary<string, object> StatusAttributes {get; private set;}
     }
 }
